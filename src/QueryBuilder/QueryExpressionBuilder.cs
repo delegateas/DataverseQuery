@@ -30,7 +30,8 @@ namespace DataverseQuery
 
         public FilterExpression GetCombinedFilter()
         {
-            if (filters.Count == 0) return new FilterExpression();
+            if (filters.Count == 0)
+                return new FilterExpression();
 
             var filter = new FilterExpression(LogicalOperator.And);
             foreach (var f in filters)
