@@ -66,6 +66,31 @@ var builder = new QueryExpressionBuilder<Account>()
 - The `Where` method currently only supports simple equality expressions (e.g., `e => e.Prop == value`).
 - Advanced filter logic (AND/OR nesting, other operators) is not yet supported.
 
+## Development
+
+### CI/CD Pipelines
+
+This repository includes automated CI/CD pipelines:
+
+- **PR Pipeline**: Runs on pull requests to validate code formatting, build, and tests
+- **Release Pipeline**: Automatically publishes NuGet packages when version tags are pushed
+
+To create a release:
+1. Tag your commit with a version (e.g., `git tag v1.0.0`)
+2. Push the tag (`git push origin v1.0.0`)
+3. The release pipeline will automatically build and publish the NuGet package
+
+**Note**: Publishing to NuGet requires the `NUGET_API_KEY` secret to be configured in the repository settings.
+
+### Contributing
+
+Before submitting a pull request:
+1. Run `dotnet format` to ensure code formatting compliance
+2. Run `dotnet build --configuration Release` to verify the build passes with zero warnings
+3. Run `dotnet test --configuration Release` to ensure all tests pass
+
+The PR pipeline enforces these requirements and treats all warnings as errors.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
