@@ -12,9 +12,10 @@ Carefully follow these instructions for C# backend development, including code s
 - Always use these C# features:
   - Top-level namespaces.
   - Primary constructors.
-  - Array initializers.
+  - Collection initializers.
   - Pattern matching with `is null` and `is not null` instead of `== null` and `!= null`.
 - Records for immutable types.
+- Use the most fitting generic collections
 - Mark all C# types as sealed.
 - Use `var` when possible.
 - Use simple collection types like `UserId[]` instead of `List<UserId>` whenever possible.
@@ -33,8 +34,33 @@ Carefully follow these instructions for C# backend development, including code s
 - Avoid try-catch unless we cannot fix the reason. We have global exception handling to handle unknown exceptions.
 - Don't add comments unless the code is truly not expressing the intent.
 - Never add XML comments.
-- Business logic is grouped by area. If something does not fit under an existing area you should ask what area it should be under. After asking, if that area does not exist, you create a folder with the area.
 - Prefer constructor dependency injection for dependency management. Only deviate from this when applying a strategy + factory pattern. 
+- Always use named tuple elements in the return type. Name the elements using PascalCasing.
+- When deconstructing tuple returns, always use explicit variable names in the assignment, e.g., `var (fromAttr, toAttr) = ...;`.
+
+## File Ending and Brace Formatting
+- There must be a blank line after the last method in a class, but no blank line before the final closing brace of the class or namespace.
+- The file may not end with a newline character.
+
+## Using Directives and Type References
+
+- Do not remove a `using` directive unless you have confirmed that all types in the file remain resolvable and a full build (Debug and Release) succeeds without it.
+- Before saving changes, explicitly check that all types used in the file (including generic constraints like `where TEntity : Entity`) have the correct `using` directives present. For example, if `Entity` or `IOrganizationService` is referenced, ensure `using Microsoft.Xrm.Sdk;` is included.
+- When using types provided by NuGet packages (including transitive dependencies), always ensure the correct `using` directive is present, even if the type is available via a transitive reference.
+
+## Analyzer and Style Rules
+
+- Treat all analyzer and style warnings as build-breaking errors. All code changes must be validated against the full set of analyzers and style rules configured for the project. Any warning or suggestion that is treated as an error in the build must be fixed before considering the build successful.
+- Before submitting a fix, check for and resolve all code style and analyzer errors, including:
+  - Method length (e.g., MA0051)
+  - Blank lines and brace placement (e.g., SA1505, SA1507, SA1516)
+  - File endings (e.g., SA1518)
+  - Unnecessary using directives (e.g., IDE0005)
+  - Static method suggestions (e.g., CA1822)
+
+## Build Validation
+
+- After any code or rule change, a Release build must be performed and must succeed with zero errors before the change is accepted.
 
 ## Implementation
 
