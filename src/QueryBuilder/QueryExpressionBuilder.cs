@@ -4,7 +4,7 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace DataverseQuery
 {
-    public sealed class QueryExpressionBuilder<TEntity>
+    public sealed class QueryExpressionBuilder<TEntity> : IQueryBuilder
         where TEntity : Entity
     {
         private readonly string entityLogicalName;
@@ -18,6 +18,32 @@ namespace DataverseQuery
             var logicalNameProp = typeof(TEntity).GetField("EntityLogicalName");
             entityLogicalName = logicalNameProp?.GetValue(null) as string
                 ?? typeof(TEntity).Name.ToLowerInvariant();
+        }
+
+        // Implement interface methods
+        public ColumnSet GetColumns()
+        {
+            return columns.Count > 0
+                ? new ColumnSet(columns.ToArray())
+                : new ColumnSet(true);
+        }
+
+        public FilterExpression GetCombinedFilter()
+        {
+            if (filters.Count == 0) return new FilterExpression();
+
+            var filter = new FilterExpression(LogicalOperator.And);
+            foreach (var f in filters)
+            {
+                filter.AddFilter(f);
+            }
+
+            return filter;
+        }
+
+        public IEnumerable<ExpandBuilder> GetExpands()
+        {
+            return expands.AsReadOnly();
         }
 
         public QueryExpressionBuilder<TEntity> Select(params Expression<Func<TEntity, object>>[] selectors)
@@ -71,12 +97,13 @@ namespace DataverseQuery
             where TTarget : Entity
         {
             ArgumentNullException.ThrowIfNull(navigation);
+            ArgumentNullException.ThrowIfNull(configure);
 
             var relName = GetRelationshipSchemaName(navigation);
             if (!string.IsNullOrEmpty(relName))
             {
                 var childBuilder = new QueryExpressionBuilder<TTarget>();
-                configure?.Invoke(childBuilder);
+                configure.Invoke(childBuilder);
                 expands.Add(new ExpandBuilder(
                     relName,
                     typeof(TTarget),
@@ -93,12 +120,13 @@ namespace DataverseQuery
             where TTarget : Entity
         {
             ArgumentNullException.ThrowIfNull(navigation);
+            ArgumentNullException.ThrowIfNull(configure);
 
             var relName = GetRelationshipSchemaName(navigation);
             if (!string.IsNullOrEmpty(relName))
             {
                 var childBuilder = new QueryExpressionBuilder<TTarget>();
-                configure?.Invoke(childBuilder);
+                configure.Invoke(childBuilder);
                 expands.Add(new ExpandBuilder(
                     relName,
                     typeof(TTarget),
@@ -147,8 +175,10 @@ namespace DataverseQuery
             return qe;
         }
 
-        internal LinkEntity BuildLinkEntity(ExpandBuilder expand)
+        public LinkEntity BuildLinkEntity(ExpandBuilder expand)
         {
+            ArgumentNullException.ThrowIfNull(expand);
+
             var (fromAttr, toAttr) = GetLinkAttributes(expand);
 
             var link = new LinkEntity
@@ -160,27 +190,20 @@ namespace DataverseQuery
                 LinkToAttributeName = toAttr,
             };
 
+            // Use interface instead of reflection
             var childBuilder = expand.Builder;
-            CopyChildColumns(childBuilder, link);
-            CopyChildFilters(childBuilder, link);
+            link.Columns = childBuilder.GetColumns();
 
-            // Build nested expands using the correct builder context
-#pragma warning disable S3011
-            var expandsProp = childBuilder.GetType().GetField("expands", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
-            var childExpands = (List<ExpandBuilder>)expandsProp.GetValue(childBuilder)!;
-#pragma warning restore S3011
-            foreach (var childExpand in childExpands)
+            var childFilter = childBuilder.GetCombinedFilter();
+            if (childFilter != null)
             {
-                // Ensure the correct entityLogicalName is used for each builder instance
-#pragma warning disable S3011
-                var buildLinkMethod = childBuilder.GetType().GetMethod("BuildLinkEntity", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-#pragma warning restore S3011
-                if (buildLinkMethod == null)
-                {
-                    throw new InvalidOperationException("BuildLinkEntity method not found on child builder.");
-                }
+                link.LinkCriteria = childFilter;
+            }
 
-                var childLink = (LinkEntity)buildLinkMethod.Invoke(childBuilder, new object[] { childExpand })!;
+            // Build nested expands using interface
+            foreach (var childExpand in childBuilder.GetExpands())
+            {
+                var childLink = childBuilder.BuildLinkEntity(childExpand);
                 link.LinkEntities.Add(childLink);
             }
 
@@ -191,11 +214,7 @@ namespace DataverseQuery
         {
             if (expand.IsCollection)
             {
-#pragma warning disable S3011
-                var method = typeof(QueryExpressionBuilder<TEntity>)
-                    .GetMethod(nameof(GetLinkAttributesForCollection), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-                return ((string FromAttr, string ToAttr))method.Invoke(null, new object[] { expand.RelationshipName })!;
-#pragma warning restore S3011
+                return GetLinkAttributesForCollection(expand.RelationshipName);
             }
             else if (expand.TargetType == typeof(TEntity))
             {
@@ -205,44 +224,10 @@ namespace DataverseQuery
             }
             else
             {
-#pragma warning disable S3011
-                var method = typeof(QueryExpressionBuilder<TEntity>)
-                    .GetMethod(nameof(GetLinkAttributesForReference), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-                return ((string FromAttr, string ToAttr))method.Invoke(null, new object[] { expand.RelationshipName, typeof(TEntity), expand.TargetType })!;
-#pragma warning restore S3011
+                return GetLinkAttributesForReference(expand.RelationshipName, typeof(TEntity), expand.TargetType);
             }
         }
 
-        private static void CopyChildColumns(object childBuilder, LinkEntity link)
-        {
-#pragma warning disable S3011
-            var columnsProp = childBuilder.GetType().GetField("columns", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
-#pragma warning restore S3011
-            var childColumns = (List<string>)columnsProp.GetValue(childBuilder)!;
-            link.Columns = childColumns.Count > 0
-                ? new ColumnSet(childColumns.ToArray())
-                : new ColumnSet(true);
-        }
-
-        private static void CopyChildFilters(object childBuilder, LinkEntity link)
-        {
-#pragma warning disable S3011
-            var filtersProp = childBuilder.GetType().GetField("filters", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
-#pragma warning restore S3011
-            var childFilters = (List<FilterExpression>)filtersProp.GetValue(childBuilder)!;
-            if (childFilters.Count > 0)
-            {
-                var filter = new FilterExpression(LogicalOperator.And);
-                foreach (var f in childFilters)
-                {
-                    filter.AddFilter(f);
-                }
-
-                link.LinkCriteria = filter;
-            }
-        }
-
-        // CopyChildExpands is no longer needed; logic is now in BuildLinkEntity
         private static string GetEntityLogicalName(Type t)
         {
             var logicalNameProp = t.GetField("EntityLogicalName");
@@ -276,24 +261,31 @@ namespace DataverseQuery
             {
                 propName = m.Member.Name;
             }
+            else if (navigation.Body is MethodCallExpression methodCall &&
+                methodCall.Method.Name == "GetRelatedEntity" && methodCall.Arguments.Count > 0 &&
+                methodCall.Arguments[0] is ConstantExpression constExpr &&
+                constExpr.Value is string s)
+            {
+                propName = s;
+            }
 
             if (string.IsNullOrEmpty(propName))
                 return null;
 
-            var prop = typeof(TEntity).GetProperty(propName);
+#pragma warning disable S6602
+            var prop = typeof(TEntity).GetProperties()
+                .FirstOrDefault(p => p.Name.Equals(propName, StringComparison.OrdinalIgnoreCase));
+#pragma warning restore S6602
             if (prop != null)
             {
 #pragma warning disable S6602
                 var attr = prop.GetCustomAttributes(false)
                     .FirstOrDefault(a => a.GetType().Name == "RelationshipSchemaNameAttribute");
 #pragma warning restore S6602
-                if (attr != null)
-                {
-                    var schemaNameProp = attr.GetType().GetProperty("SchemaName");
-                    var schemaName = schemaNameProp?.GetValue(attr) as string;
-                    if (!string.IsNullOrEmpty(schemaName))
-                        return schemaName;
-                }
+                var schemaNameProp = attr != null ? attr.GetType().GetProperty("SchemaName") : null;
+                var schemaName = schemaNameProp != null ? schemaNameProp.GetValue(attr) as string : null;
+                if (!string.IsNullOrEmpty(schemaName))
+                    return schemaName;
             }
 
             return propName;
@@ -314,7 +306,10 @@ namespace DataverseQuery
             if (string.IsNullOrEmpty(propName))
                 return null;
 
-            var prop = typeof(TEntity).GetProperty(propName);
+#pragma warning disable S6602
+            var prop = typeof(TEntity).GetProperties()
+                .FirstOrDefault(p => p.Name.Equals(propName, StringComparison.OrdinalIgnoreCase));
+#pragma warning restore S6602
             if (prop != null)
             {
 #pragma warning disable S6602
