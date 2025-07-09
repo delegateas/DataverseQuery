@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "MSYS.Dataverse.QueryBuilder/1.0.0": {
+        "dependencies": {
+          "Microsoft.CrmSdk.CoreAssemblies": "9.0.2.42"
+        },
+        "runtime": {
+          "MSYS.Dataverse.QueryBuilder.dll": {}
+        }
+      },
+      "Microsoft.CrmSdk.CoreAssemblies/9.0.2.42": {
+        "dependencies": {
+          "System.Text.Json": "5.0.2"
+        },
+        "runtime": {
+          "lib/net462/Microsoft.Crm.Sdk.Proxy.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.2.46.5279"
+          },
+          "lib/net462/Microsoft.Xrm.Sdk.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.2.46.5279"
+          }
+        }
+      },
+      "System.Text.Json/5.0.2": {}
+    }
+  },
+  "libraries": {
+    "MSYS.Dataverse.QueryBuilder/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.CrmSdk.CoreAssemblies/9.0.2.42": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8zOc1bETaXdmEiaMBpJOqF2co+nvYzt0ypZtA1QAaqrEAhv1qIA8AVSEpdqUakhb8JfBt4ct+kOQqVeE2+TUIQ==",
+      "path": "microsoft.crmsdk.coreassemblies/9.0.2.42",
+      "hashPath": "microsoft.crmsdk.coreassemblies.9.0.2.42.nupkg.sha512"
+    },
+    "System.Text.Json/5.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-I47dVIGiV6SfAyppphxqupertT/5oZkYLDCX6vC3HpOI4ZLjyoKAreUoem2ie6G0RbRuFrlqz/PcTQjfb2DOfQ==",
+      "path": "system.text.json/5.0.2",
+      "hashPath": "system.text.json.5.0.2.nupkg.sha512"
+    }
+  }
+}

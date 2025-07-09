@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>MSYS.Dataverse.QueryBuilder</id>
+    <version>0.1.0</version>
+    <authors>Magnus Gether Sørensen</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/your-org/MSYS.Dataverse.QueryBuilder</projectUrl>
+    <description>Strongly-typed QueryExpression builder for Dataverse, with a fluent builder pattern and extension methods for IOrganizationService. .NET 8 compatible.</description>
+    <copyright>Copyright © Magnus Gether Sørensen 2025</copyright>
+    <tags>dataverse, dynamics, crm, queryexpression, builder, strongly-typed, fluent, csharp</tags>
+    <repository type="git" url="https://github.com/your-org/MSYS.Dataverse.QueryBuilder" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.CrmSdk.CoreAssemblies" version="9.0.2.42" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\git\DataverseQuery\MSYS.Dataverse.QueryBuilder\bin\Debug\net8.0\MSYS.Dataverse.QueryBuilder.dll" target="lib\net8.0\MSYS.Dataverse.QueryBuilder.dll" />
+    <file src="C:\git\DataverseQuery\MSYS.Dataverse.QueryBuilder\README.md" target="README.md" />
+  </files>
+</package>
