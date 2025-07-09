@@ -16,13 +16,13 @@ DataverseQuery provides a fluent, strongly-typed builder pattern for constructin
 Install via NuGet:
 
 ```
-dotnet add package MSYS.Dataverse.QueryBuilder
+dotnet add package DataverseQuery
 ```
 
 Or via the NuGet Package Manager:
 
 ```
-PM> Install-Package MSYS.Dataverse.QueryBuilder
+PM> Install-Package DataverseQuery
 ```
 
 ## Usage
@@ -54,30 +54,17 @@ var builder = new QueryExpressionBuilder<Account>()
     );
 ```
 
-### Retrieve Entities
-
-```csharp
-IOrganizationService service = ...;
-List<Account> accounts = service.RetrieveAll(builder);
-```
-
 ## Features
 
 - Strongly-typed column selection (`Select`)
 - Strongly-typed filters (`Where`) — currently supports simple equality
 - Relationship expansion (`Expand`) for both collections and references
 - Top N results (`Top`)
-- Extension method for `IOrganizationService` to retrieve entities
 
 ## Limitations
 
 - The `Where` method currently only supports simple equality expressions (e.g., `e => e.Prop == value`).
-- Relationship attribute mapping uses conventions and may require adjustment for complex scenarios.
 - Advanced filter logic (AND/OR nesting, other operators) is not yet supported.
-
-## Contributing
-
-Contributions are welcome! Please open issues or pull requests on [GitHub](https://github.com/your-org/DataverseQuery).
 
 ## License
 
