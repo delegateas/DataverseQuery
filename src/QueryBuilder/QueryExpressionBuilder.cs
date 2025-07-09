@@ -67,7 +67,11 @@ namespace DataverseQuery
             if (!string.IsNullOrEmpty(name))
             {
                 var filter = new FilterExpression();
-                filter.AddCondition(name, op, values.Cast<object>().ToArray());
+                var primitiveValues = values
+                    .Cast<object>()
+                    .Select(v => v is Enum ? Convert.ChangeType(v, Enum.GetUnderlyingType(v.GetType()), System.Globalization.CultureInfo.InvariantCulture) : v)
+                    .ToArray();
+                filter.AddCondition(name, op, primitiveValues);
                 filters.Add(filter);
             }
 

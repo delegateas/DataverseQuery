@@ -29,7 +29,7 @@ namespace DataverseQuery.Tests
             Assert.NotNull(condition);
             Assert.Equal("StateCode", condition.AttributeName);
             Assert.Equal(ConditionOperator.Equal, condition.Operator);
-            Assert.Equal(SharedContext.AccountState.Aktiv, condition.Values[0]);
+            Assert.Equal((int)SharedContext.AccountState.Aktiv, condition.Values[0]);
         }
 
         [Fact]
