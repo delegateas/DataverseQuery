@@ -69,7 +69,13 @@ namespace DataverseQuery
                 var filter = new FilterExpression();
                 var primitiveValues = values
                     .Cast<object>()
-                    .Select(v => v is Enum ? Convert.ChangeType(v, Enum.GetUnderlyingType(v.GetType()), System.Globalization.CultureInfo.InvariantCulture) : v)
+                    .Select(v =>
+                        v switch
+                        {
+                            Enum => Convert.ChangeType(v, Enum.GetUnderlyingType(v.GetType()), System.Globalization.CultureInfo.InvariantCulture),
+                            EntityReference er => er.Id,
+                            _ => v,
+                        })
                     .ToArray();
                 filter.AddCondition(name, op, primitiveValues);
                 filters.Add(filter);

@@ -37,10 +37,8 @@ Carefully follow these instructions for C# backend development, including code s
 - Prefer constructor dependency injection for dependency management. Only deviate from this when applying a strategy + factory pattern. 
 - Always use named tuple elements in the return type. Name the elements using PascalCasing.
 - When deconstructing tuple returns, always use explicit variable names in the assignment, e.g., `var (fromAttr, toAttr) = ...;`.
-
-## File Ending and Brace Formatting
 - There must be a blank line after the last method in a class, but no blank line before the final closing brace of the class or namespace.
-- The file may not end with a newline character.
+- Use switch expressions over nested ternary operators.
 
 ## Using Directives and Type References
 
@@ -54,7 +52,6 @@ Carefully follow these instructions for C# backend development, including code s
 - Before submitting a fix, check for and resolve all code style and analyzer errors, including:
   - Method length (e.g., MA0051)
   - Blank lines and brace placement (e.g., SA1505, SA1507, SA1516)
-  - File endings (e.g., SA1518)
   - Unnecessary using directives (e.g., IDE0005)
   - Static method suggestions (e.g., CA1822)
 

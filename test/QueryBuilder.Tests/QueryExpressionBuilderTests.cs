@@ -1,3 +1,4 @@
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
 namespace DataverseQuery.Tests
@@ -40,6 +41,24 @@ namespace DataverseQuery.Tests
 
             var query = builder.Build();
             Assert.Equal(5, query.TopCount);
+        }
+
+        [Fact]
+        public void Where_EntityReferenceFilter_UsesGuidValue()
+        {
+            var parentId = Guid.NewGuid();
+            var builder = new QueryExpressionBuilder<SharedContext.Account>()
+                .Where(e => e.ParentAccountId, ConditionOperator.Equal, new EntityReference(SharedContext.Account.EntityLogicalName, parentId));
+
+            var query = builder.Build();
+            var allConditions = query.Criteria.Conditions
+                .Concat(query.Criteria.Filters.SelectMany(f => f.Conditions))
+                .ToList();
+            var condition = allConditions.Find(c => string.Equals(c.AttributeName, "parentaccountid", StringComparison.OrdinalIgnoreCase));
+            Assert.NotNull(condition);
+            Assert.Equal(ConditionOperator.Equal, condition.Operator);
+            Assert.IsType<Guid>(condition.Values[0]);
+            Assert.Equal(parentId, (Guid)condition.Values[0]);
         }
     }
 }
