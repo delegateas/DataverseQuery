@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <PackageId>DataverseQuery</PackageId>
-    <Description>Strongly-typed QueryExpression builder for Dataverse, with a fluent builder pattern and extension methods for IOrganizationService. .NET 8 compatible.</Description>
+    <Description>Strongly-typed QueryExpression builder for Dataverse, with a fluent builder pattern
+      and extension methods for IOrganizationService. .NET 8 compatible.</Description>
     <RepositoryUrl>https://github.com/delegateas/DataverseQuery</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/delegateas/DataverseQuery</PackageProjectUrl>
@@ -11,13 +12,13 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
-<NoWarn>CS1591;NU5104</NoWarn>
+    <NoWarn>CS1591;NU5104</NoWarn>
     <Copyright>Copyright © Delegate 2025</Copyright>
     <PackageVersion>0.1.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.9" />
-    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

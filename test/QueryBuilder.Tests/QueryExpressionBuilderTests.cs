@@ -20,7 +20,7 @@ namespace DataverseQuery.Tests
         public void Where_AddsSimpleEqualityFilter()
         {
             var builder = new QueryExpressionBuilder<TestEntity>()
-                .Where(e => e.StateCode == 1);
+                .Where(e => e.StateCode, ConditionOperator.Equal, 1);
 
             var query = builder.Build();
             Assert.NotNull(query.Criteria);

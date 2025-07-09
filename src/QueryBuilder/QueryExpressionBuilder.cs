@@ -45,7 +45,7 @@ namespace DataverseQuery
 
             foreach (var selector in selectors)
             {
-                var name = GetAttributeName(selector);
+                var name = GetAttributeName<object>(selector);
                 if (!string.IsNullOrEmpty(name))
                 {
                     columns.Add(name);
@@ -55,13 +55,19 @@ namespace DataverseQuery
             return this;
         }
 
-        public QueryExpressionBuilder<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
+        public QueryExpressionBuilder<TEntity> Where<TValue>(
+            Expression<Func<TEntity, TValue>> fieldSelector,
+            ConditionOperator op,
+            params TValue[] values)
         {
-            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(fieldSelector);
+            ArgumentNullException.ThrowIfNull(values);
 
-            var filter = ExpressionToFilter(predicate);
-            if (filter is not null)
+            var name = GetAttributeName(fieldSelector);
+            if (!string.IsNullOrEmpty(name))
             {
+                var filter = new FilterExpression();
+                filter.AddCondition(name, op, values.Cast<object>().ToArray());
                 filters.Add(filter);
             }
 
@@ -245,7 +251,7 @@ namespace DataverseQuery
         }
 
         // --- Helpers ---
-        private static string? GetAttributeName(Expression<Func<TEntity, object>> expr)
+        private static string? GetAttributeName<TValue>(Expression<Func<TEntity, TValue>> expr)
         {
             if (expr.Body is MemberExpression member)
             {
@@ -308,23 +314,6 @@ namespace DataverseQuery
 
             var toAttr = GetEntityLogicalName(targetType) + "id";
             return (fromAttr, toAttr);
-        }
-
-        // This is a stub. For a real implementation, use a library or hand-write for common cases.
-        private static FilterExpression ExpressionToFilter(Expression<Func<TEntity, bool>> predicate)
-        {
-            // Only supports simple equality: e => e.Prop == value
-            if (predicate.Body is BinaryExpression be &&
-                be.NodeType == ExpressionType.Equal &&
-                be.Left is MemberExpression left &&
-                be.Right is ConstantExpression right)
-            {
-                var filter = new FilterExpression();
-                filter.AddCondition(left.Member.Name, ConditionOperator.Equal, right.Value);
-                return filter;
-            }
-
-            throw new NotSupportedException("Only simple equality expressions are supported in Where().");
         }
     }
 }
