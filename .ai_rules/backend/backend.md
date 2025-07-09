@@ -69,5 +69,5 @@ IMPORTANT: Always follow these steps very carefully when implementing changes:
 1. Always start new changes by writing new test cases (or change existing tests).
 2. Build and test your changes:
    - Always run `dotnet build --configuration Release` to build the backend in release mode.
-   - Run `dotnet test` to run all tests.
+   - Run `dotnet test --configuration Release` to run all tests.
 3. Format the code by running `dotnet format`. This will format the code according to the .editorconfig file.

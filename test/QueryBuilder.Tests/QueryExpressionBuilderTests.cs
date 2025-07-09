@@ -7,7 +7,7 @@ namespace DataverseQuery.Tests
         [Fact]
         public void Select_AddsColumns()
         {
-            var builder = new QueryExpressionBuilder<TestEntity>()
+            var builder = new QueryExpressionBuilder<SharedContext.Account>()
                 .Select(e => e.Name, e => e.StateCode);
 
             var query = builder.Build();
@@ -19,8 +19,8 @@ namespace DataverseQuery.Tests
         [Fact]
         public void Where_AddsSimpleEqualityFilter()
         {
-            var builder = new QueryExpressionBuilder<TestEntity>()
-                .Where(e => e.StateCode, ConditionOperator.Equal, 1);
+            var builder = new QueryExpressionBuilder<SharedContext.Account>()
+                .Where(e => e.StateCode, ConditionOperator.Equal, SharedContext.AccountState.Aktiv);
 
             var query = builder.Build();
             Assert.NotNull(query.Criteria);
@@ -29,13 +29,13 @@ namespace DataverseQuery.Tests
             Assert.NotNull(condition);
             Assert.Equal("StateCode", condition.AttributeName);
             Assert.Equal(ConditionOperator.Equal, condition.Operator);
-            Assert.Equal(1, condition.Values[0]);
+            Assert.Equal(SharedContext.AccountState.Aktiv, condition.Values[0]);
         }
 
         [Fact]
         public void Top_SetsTopCount()
         {
-            var builder = new QueryExpressionBuilder<TestEntity>()
+            var builder = new QueryExpressionBuilder<SharedContext.Account>()
                 .Top(5);
 
             var query = builder.Build();
