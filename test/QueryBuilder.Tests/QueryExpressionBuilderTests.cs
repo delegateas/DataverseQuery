@@ -53,8 +53,10 @@ namespace DataverseQuery.Tests
             var nestedLink = link.LinkEntities[0];
             Assert.Equal("account_primary_contact", nestedLink.LinkToEntityName);
             Assert.NotNull(nestedLink.LinkCriteria);
-            Assert.Single(nestedLink.LinkCriteria.Conditions);
-            var condition = nestedLink.LinkCriteria.Conditions[0];
+            Assert.Single(nestedLink.LinkCriteria.Filters);
+            var filter = nestedLink.LinkCriteria.Filters[0];
+            Assert.Single(filter.Conditions);
+            var condition = filter.Conditions[0];
             Assert.Equal("firstname", condition.AttributeName);
             Assert.Equal(ConditionOperator.NotNull, condition.Operator);
         }

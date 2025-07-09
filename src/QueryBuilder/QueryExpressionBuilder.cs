@@ -190,20 +190,14 @@ namespace DataverseQuery
                 LinkToAttributeName = toAttr,
             };
 
-            // Use interface instead of reflection
-            var childBuilder = expand.Builder;
-            link.Columns = childBuilder.GetColumns();
-
-            var childFilter = childBuilder.GetCombinedFilter();
-            if (childFilter != null)
-            {
-                link.LinkCriteria = childFilter;
-            }
+            var expandBuilder = expand.Builder;
+            link.Columns = expandBuilder.GetColumns();
+            link.LinkCriteria = expandBuilder.GetCombinedFilter();
 
             // Build nested expands using interface
-            foreach (var childExpand in childBuilder.GetExpands())
+            foreach (var childExpand in expandBuilder.GetExpands())
             {
-                var childLink = childBuilder.BuildLinkEntity(childExpand);
+                var childLink = expandBuilder.BuildLinkEntity(childExpand);
                 link.LinkEntities.Add(childLink);
             }
 
