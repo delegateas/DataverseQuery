@@ -10,9 +10,9 @@ namespace DataverseQuery.QueryBuilder
 
         public bool IsCollection { get; }
 
-        public ExpandBuilder(string relationshipName, Type targetType, IQueryBuilder builder, bool isCollection)
+        public ExpandBuilder(string relationshipNamex, Type targetType, IQueryBuilder builder, bool isCollection)
         {
-            RelationshipName = relationshipName;
+            RelationshipName = relationshipNamex;
             TargetType = targetType;
             Builder = builder;
             IsCollection = isCollection;

@@ -40,8 +40,8 @@ namespace DataverseQuery.QueryBuilder
             IAttributeNameResolver attributeNameResolver,
             IValueConverter valueConverter)
         {
-            var logicalNameProp = typeof(TEntity).GetField("EntityLogicalName");
-            entityLogicalName = logicalNameProp?.GetValue(null) as string
+            var logicalNamePropx = typeof(TEntity).GetField("EntityLogicalName");
+            entityLogicalName = logicalNamePropx?.GetValue(null) as string
                 ?? typeof(TEntity).Name.ToLowerInvariant();
 
             this.attributeNameResolver = attributeNameResolver ?? throw new ArgumentNullException(nameof(attributeNameResolver));
