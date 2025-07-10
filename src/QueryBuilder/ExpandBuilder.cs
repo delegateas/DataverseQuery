@@ -1,4 +1,4 @@
-namespace DataverseQuery
+namespace DataverseQuery.QueryBuilder
 {
     public sealed class ExpandBuilder
     {
