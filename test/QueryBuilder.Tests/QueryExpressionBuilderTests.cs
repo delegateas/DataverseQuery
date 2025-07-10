@@ -231,7 +231,7 @@ namespace DataverseQuery.Tests
                 .OrWhereGroup(group => { /* Empty group */ })
                 .Build();
 
-            // Assertx - Only the regular Where condition should be present
+            // Assert - Only the regular Where condition should be present
             Assert.Single(query.Criteria.Filters);
             var filter = query.Criteria.Filters[0];
             Assert.Equal(LogicalOperator.And, filter.FilterOperator);
