@@ -3,7 +3,7 @@ using DataverseQuery.QueryBuilder.Interfaces;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace DataverseQuery
+namespace DataverseQuery.QueryBuilder
 {
     /// <summary>
     /// Builder for creating grouped filter conditions with a specific logical operator.

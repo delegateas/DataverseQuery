@@ -1,3 +1,4 @@
+using DataverseQuery.QueryBuilder;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 

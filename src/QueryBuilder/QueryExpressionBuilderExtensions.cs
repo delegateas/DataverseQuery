@@ -1,6 +1,6 @@
 using Microsoft.Xrm.Sdk;
 
-namespace DataverseQuery
+namespace DataverseQuery.QueryBuilder
 {
     public static class QueryExpressionBuilderExtensions
     {

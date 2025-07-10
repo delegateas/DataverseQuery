@@ -4,7 +4,7 @@ using DataverseQuery.QueryBuilder.Services;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
-namespace DataverseQuery
+namespace DataverseQuery.QueryBuilder
 {
     public sealed class QueryExpressionBuilder<TEntity> : IQueryBuilder
         where TEntity : Entity

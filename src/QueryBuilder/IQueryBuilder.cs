@@ -1,6 +1,6 @@
 using Microsoft.Xrm.Sdk.Query;
 
-namespace DataverseQuery
+namespace DataverseQuery.QueryBuilder
 {
     public interface IQueryBuilder
     {
