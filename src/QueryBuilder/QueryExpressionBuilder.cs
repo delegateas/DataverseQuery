@@ -3,6 +3,7 @@ using DataverseQuery.QueryBuilder.Interfaces;
 using DataverseQuery.QueryBuilder.Services;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using System.Reflection;
 
 namespace DataverseQuery.QueryBuilder
 {
@@ -16,6 +17,7 @@ namespace DataverseQuery.QueryBuilder
         private readonly IAttributeNameResolver attributeNameResolver;
         private readonly IValueConverter valueConverter;
         private int? topCount;
+        private int aliasCounter = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryExpressionBuilder{TEntity}"/> class.
@@ -162,6 +164,16 @@ namespace DataverseQuery.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Marks this query for projection to a strongly-typed result.
+        /// The source generator will analyze the Select and Expand calls to generate a result type.
+        /// </summary>
+        /// <returns>A ProjectionBuilder for creating type-safe result mappers.</returns>
+        public ProjectionBuilder<TEntity> Project()
+        {
+            return new ProjectionBuilder<TEntity>(this, attributeNameResolver);
+        }
+
         public QueryExpression Build()
         {
             var qe = new QueryExpression(entityLogicalName)
@@ -194,11 +206,131 @@ namespace DataverseQuery.QueryBuilder
             return qe;
         }
 
+        /// <summary>
+        /// Gets a result mapper function that transforms query results into dynamic objects
+        /// containing only the selected columns and linked entities.
+        /// </summary>
+        /// <returns>A ResultMapper that can create mapping functions.</returns>
+        [Obsolete("Use GetResultMapper<TResult> for strongly-typed projections instead.")]
+        public ResultMapper GetResultMapper()
+        {
+            // Ensure aliases are assigned by building the query
+            Build();
+
+            var expandMappings = new List<ExpandMapping>();
+            foreach (var expand in expands)
+            {
+                expandMappings.Add(BuildExpandMapping(expand));
+            }
+
+            return new ResultMapper(columns, expandMappings);
+        }
+
+        /// <summary>
+        /// Gets a strongly-typed result mapper function that transforms query results into objects of type TResult.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result object.</typeparam>
+        /// <param name="projection">A function that projects the entity into the result type.</param>
+        /// <returns>A function that maps Entity to TResult.</returns>
+        public Func<Entity, TResult> GetResultMapper<TResult>(Func<QueryProjection<TEntity>, TResult> projection)
+        {
+            ArgumentNullException.ThrowIfNull(projection);
+
+            // Ensure aliases are assigned by building the query
+            Build();
+
+            // Build alias map
+            var aliasMap = BuildAliasMap();
+
+            return entity =>
+            {
+                var queryProjection = new QueryProjection<TEntity>(entity, aliasMap, attributeNameResolver);
+                return projection(queryProjection);
+            };
+        }
+
+        /// <summary>
+        /// Gets a dictionary mapping relationship names to their assigned aliases.
+        /// </summary>
+        /// <returns>A dictionary of relationship name to alias mappings.</returns>
+        public Dictionary<string, string> GetAliasMap()
+        {
+            // Ensure aliases are assigned
+            Build();
+            return BuildAliasMap();
+        }
+
+        private Dictionary<string, string> BuildAliasMap()
+        {
+            var aliasMap = new Dictionary<string, string>();
+
+            foreach (var expand in expands)
+            {
+                if (!string.IsNullOrEmpty(expand.Alias))
+                {
+                    aliasMap[expand.RelationshipName] = expand.Alias;
+                    AddNestedAliases(aliasMap, expand);
+                }
+            }
+
+            return aliasMap;
+        }
+
+        private static void AddNestedAliases(Dictionary<string, string> aliasMap, ExpandBuilder expand)
+        {
+            foreach (var nestedExpand in expand.Builder.GetExpands())
+            {
+                if (!string.IsNullOrEmpty(nestedExpand.Alias))
+                {
+                    aliasMap[nestedExpand.RelationshipName] = nestedExpand.Alias;
+                    AddNestedAliases(aliasMap, nestedExpand);
+                }
+            }
+        }
+
+        private static ExpandMapping BuildExpandMapping(ExpandBuilder expand)
+        {
+            var mapping = new ExpandMapping
+            {
+                PropertyName = expand.RelationshipName,
+                Alias = expand.Alias
+            };
+
+            // Get columns from the expand builder
+            var expandBuilder = expand.Builder;
+            var columnSet = expandBuilder.GetColumns();
+
+            if (columnSet.AllColumns)
+            {
+                // If all columns are selected, we can't enumerate them without metadata
+                // For now, we'll just use an empty list and rely on the user to handle this case
+                mapping.Columns = new List<string>();
+            }
+            else
+            {
+                mapping.Columns = columnSet.Columns.ToList();
+            }
+
+            // Build nested expand mappings
+            foreach (var nestedExpand in expandBuilder.GetExpands())
+            {
+                mapping.NestedExpands.Add(BuildExpandMapping(nestedExpand));
+            }
+
+            return mapping;
+        }
+
         public LinkEntity BuildLinkEntity(ExpandBuilder expand)
         {
             ArgumentNullException.ThrowIfNull(expand);
 
             var (fromAttr, toAttr) = GetLinkAttributes(expand);
+
+            // Generate unique alias if not already set
+            if (string.IsNullOrEmpty(expand.Alias))
+            {
+                expand.Alias = $"link{aliasCounter++}";
+            }
 
             var link = new LinkEntity
             {
@@ -207,6 +339,7 @@ namespace DataverseQuery.QueryBuilder
                 LinkFromEntityName = entityLogicalName,
                 LinkFromAttributeName = fromAttr,
                 LinkToAttributeName = toAttr,
+                EntityAlias = expand.Alias,
             };
 
             var expandBuilder = expand.Builder;
