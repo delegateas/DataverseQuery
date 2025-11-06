@@ -3,6 +3,7 @@ using DataverseQuery.QueryBuilder.Interfaces;
 using DataverseQuery.QueryBuilder.Services;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using System.Reflection;
 
 namespace DataverseQuery.QueryBuilder
 {
@@ -16,6 +17,7 @@ namespace DataverseQuery.QueryBuilder
         private readonly IAttributeNameResolver attributeNameResolver;
         private readonly IValueConverter valueConverter;
         private int? topCount;
+        private int aliasCounter = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryExpressionBuilder{TEntity}"/> class.
@@ -194,11 +196,68 @@ namespace DataverseQuery.QueryBuilder
             return qe;
         }
 
+        /// <summary>
+        /// Gets a result mapper function that transforms query results into dynamic objects
+        /// containing only the selected columns and linked entities.
+        /// </summary>
+        /// <returns>A ResultMapper that can create mapping functions.</returns>
+        public ResultMapper GetResultMapper()
+        {
+            // Ensure aliases are assigned by building the query
+            Build();
+
+            var expandMappings = new List<ExpandMapping>();
+            foreach (var expand in expands)
+            {
+                expandMappings.Add(BuildExpandMapping(expand));
+            }
+
+            return new ResultMapper(columns, expandMappings);
+        }
+
+        private static ExpandMapping BuildExpandMapping(ExpandBuilder expand)
+        {
+            var mapping = new ExpandMapping
+            {
+                PropertyName = expand.RelationshipName,
+                Alias = expand.Alias
+            };
+
+            // Get columns from the expand builder
+            var expandBuilder = expand.Builder;
+            var columnSet = expandBuilder.GetColumns();
+
+            if (columnSet.AllColumns)
+            {
+                // If all columns are selected, we can't enumerate them without metadata
+                // For now, we'll just use an empty list and rely on the user to handle this case
+                mapping.Columns = new List<string>();
+            }
+            else
+            {
+                mapping.Columns = columnSet.Columns.ToList();
+            }
+
+            // Build nested expand mappings
+            foreach (var nestedExpand in expandBuilder.GetExpands())
+            {
+                mapping.NestedExpands.Add(BuildExpandMapping(nestedExpand));
+            }
+
+            return mapping;
+        }
+
         public LinkEntity BuildLinkEntity(ExpandBuilder expand)
         {
             ArgumentNullException.ThrowIfNull(expand);
 
             var (fromAttr, toAttr) = GetLinkAttributes(expand);
+
+            // Generate unique alias if not already set
+            if (string.IsNullOrEmpty(expand.Alias))
+            {
+                expand.Alias = $"link{aliasCounter++}";
+            }
 
             var link = new LinkEntity
             {
@@ -207,6 +266,7 @@ namespace DataverseQuery.QueryBuilder
                 LinkFromEntityName = entityLogicalName,
                 LinkFromAttributeName = fromAttr,
                 LinkToAttributeName = toAttr,
+                EntityAlias = expand.Alias,
             };
 
             var expandBuilder = expand.Builder;
