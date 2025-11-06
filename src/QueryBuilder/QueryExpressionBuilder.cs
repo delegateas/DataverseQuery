@@ -164,6 +164,16 @@ namespace DataverseQuery.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Marks this query for projection to a strongly-typed result.
+        /// The source generator will analyze the Select and Expand calls to generate a result type.
+        /// </summary>
+        /// <returns>A ProjectionBuilder for creating type-safe result mappers.</returns>
+        public ProjectionBuilder<TEntity> Project()
+        {
+            return new ProjectionBuilder<TEntity>(this, attributeNameResolver);
+        }
+
         public QueryExpression Build()
         {
             var qe = new QueryExpression(entityLogicalName)

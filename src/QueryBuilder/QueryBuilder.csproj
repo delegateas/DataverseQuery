@@ -20,4 +20,12 @@
     <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.9" />
     <None Include="..\..\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference the source generator -->
+    <ProjectReference Include="..\QueryBuilder.SourceGenerator\QueryBuilder.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
 </Project>
