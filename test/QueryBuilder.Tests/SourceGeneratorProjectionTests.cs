@@ -19,7 +19,14 @@ namespace DataverseQuery.Tests
                 .Select(e => e.Name, e => e.AccountNumber)
                 .Project();
 
-            // The source generator will create Query0Result class with Name and AccountNumber properties
+            // The source generator auto-generates:
+            // 1. Query0Result class with Name and AccountNumber properties
+            // 2. ToQuery0Result() extension method on ProjectionBuilder<Account>
+
+            // No manual mapper needed! The generator creates it for us:
+            // var mapper = projection.ToQuery0Result();
+
+            // For this test, we'll use the manual approach to verify both work
             var mapper = projection.To(proj => new
             {
                 Name = proj.Get(a => a.Name),
@@ -218,6 +225,9 @@ namespace DataverseQuery.Tests
                 .Where(e => e.StateCode, ConditionOperator.Equal, SharedContext.AccountState.Aktiv)
                 .Project();
 
+            // The source generator creates ToQuery{N}Result() extension method
+            // In production code, you would simply call: var mapper = projection.ToQuery5Result();
+
             var mapper = projection.To(proj => new
             {
                 Name = proj.Get(a => a.Name),
@@ -241,5 +251,30 @@ namespace DataverseQuery.Tests
             Assert.Equal("ACC-100", result.AccountNumber);
             Assert.NotNull(result.StateCode);
         }
+
+        // NOTE: The following demonstrates the ideal usage pattern with auto-generated mappers:
+        //
+        // var projection = new QueryExpressionBuilder<Account>()
+        //     .Select(e => e.Name, e => e.AccountNumber)
+        //     .Expand(a => a.account_primary_contact,
+        //         c => c.Select(x => x.FirstName, x => x.LastName))
+        //     .Project();
+        //
+        // // The source generator automatically creates this extension method:
+        // var mapper = projection.ToQuery0Result();
+        //
+        // // Execute query
+        // var query = projection.Build();
+        // var results = service.RetrieveMultiple(query);
+        //
+        // // Map to strongly-typed results - no manual projection lambda needed!
+        // var accounts = results.Entities.Select(mapper).ToList();
+        //
+        // // Full IntelliSense support for the Query0Result type!
+        // foreach (var account in accounts)
+        // {
+        //     Console.WriteLine(account.Name);  // IntelliSense works!
+        //     Console.WriteLine(account.account_primary_contact?.FirstName);  // Type-safe!
+        // }
     }
 }
