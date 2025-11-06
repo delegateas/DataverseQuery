@@ -201,6 +201,7 @@ namespace DataverseQuery.QueryBuilder
         /// containing only the selected columns and linked entities.
         /// </summary>
         /// <returns>A ResultMapper that can create mapping functions.</returns>
+        [Obsolete("Use GetResultMapper<TResult> for strongly-typed projections instead.")]
         public ResultMapper GetResultMapper()
         {
             // Ensure aliases are assigned by building the query
@@ -213,6 +214,68 @@ namespace DataverseQuery.QueryBuilder
             }
 
             return new ResultMapper(columns, expandMappings);
+        }
+
+        /// <summary>
+        /// Gets a strongly-typed result mapper function that transforms query results into objects of type TResult.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result object.</typeparam>
+        /// <param name="projection">A function that projects the entity into the result type.</param>
+        /// <returns>A function that maps Entity to TResult.</returns>
+        public Func<Entity, TResult> GetResultMapper<TResult>(Func<QueryProjection<TEntity>, TResult> projection)
+        {
+            ArgumentNullException.ThrowIfNull(projection);
+
+            // Ensure aliases are assigned by building the query
+            Build();
+
+            // Build alias map
+            var aliasMap = BuildAliasMap();
+
+            return entity =>
+            {
+                var queryProjection = new QueryProjection<TEntity>(entity, aliasMap, attributeNameResolver);
+                return projection(queryProjection);
+            };
+        }
+
+        /// <summary>
+        /// Gets a dictionary mapping relationship names to their assigned aliases.
+        /// </summary>
+        /// <returns>A dictionary of relationship name to alias mappings.</returns>
+        public Dictionary<string, string> GetAliasMap()
+        {
+            // Ensure aliases are assigned
+            Build();
+            return BuildAliasMap();
+        }
+
+        private Dictionary<string, string> BuildAliasMap()
+        {
+            var aliasMap = new Dictionary<string, string>();
+
+            foreach (var expand in expands)
+            {
+                if (!string.IsNullOrEmpty(expand.Alias))
+                {
+                    aliasMap[expand.RelationshipName] = expand.Alias;
+                    AddNestedAliases(aliasMap, expand);
+                }
+            }
+
+            return aliasMap;
+        }
+
+        private static void AddNestedAliases(Dictionary<string, string> aliasMap, ExpandBuilder expand)
+        {
+            foreach (var nestedExpand in expand.Builder.GetExpands())
+            {
+                if (!string.IsNullOrEmpty(nestedExpand.Alias))
+                {
+                    aliasMap[nestedExpand.RelationshipName] = nestedExpand.Alias;
+                    AddNestedAliases(aliasMap, nestedExpand);
+                }
+            }
         }
 
         private static ExpandMapping BuildExpandMapping(ExpandBuilder expand)

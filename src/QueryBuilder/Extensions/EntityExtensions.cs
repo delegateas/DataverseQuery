@@ -28,6 +28,21 @@ namespace DataverseQuery.QueryBuilder.Extensions
         }
 
         /// <summary>
+        /// Checks if the entity has any aliased values for the given alias.
+        /// </summary>
+        /// <param name="entity">The entity to check.</param>
+        /// <param name="alias">The alias of the linked entity.</param>
+        /// <returns>True if any aliased values exist for the given alias, otherwise false.</returns>
+        public static bool HasAliasedValues(this Entity entity, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+            ArgumentNullException.ThrowIfNull(alias);
+
+            var prefix = $"{alias}.";
+            return entity.Attributes.Keys.Any(key => key.StartsWith(prefix));
+        }
+
+        /// <summary>
         /// Gets an attribute value from the entity.
         /// </summary>
         /// <typeparam name="T">The expected type of the attribute value.</typeparam>
